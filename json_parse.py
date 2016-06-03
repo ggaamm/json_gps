@@ -6,15 +6,26 @@ from pprint import pprint
 # -*- coding: utf-8 -*-
 with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
     data = json.load(data_file)
-    print type(data)
-    print len(data)
-    print data.keys()
-    print (data)
+    #print type(data)
+    #print len(data)
+    #print data.keys()
+    #print (data)
     #print type(coord)
     print('------')
+    countX=0
+    countY=0
+
+    def findGrid(latti,longi,shiftn,grids):
+        ll = (latti * 2**shiftn)+long(longi)
+        ll /= 52113
+        #gridnum = long(ll / 2**grids)
+        return long(ll)
 
     def findVals(isX,index,arr,minx,miny,maxx,maxy,prevX,prevY,smallestDistX,smallestDistY,maxDistX,maxDistY):
+
         if isX:
+            global countX
+            countX +=1
             arrindex = arr[index]#(arr[index]-29) * 100000
             if minx >= arrindex:
                 minx = arrindex
@@ -31,6 +42,8 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
                     maxDistX = abs(prevX - arrindex)
 
         else:
+            global countY
+            countY += 1
             arrindex = arr[index]#(arr[index]-40) * 100000
             if miny >= arrindex:
                 miny = arrindex
@@ -48,6 +61,8 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
         return isX,minx,miny,maxx,maxy,prevX,prevY,smallestDistX,smallestDistY,maxDistX,maxDistY
 
     file = open("newfile.txt", "w")
+    countX =0
+    countY=0
     strs =""
     minx= sys.float_info.max
     miny =sys.float_info.max
@@ -61,6 +76,8 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
     maxDistY = 0
     isX = True
     pointCount=0
+
+    filegrid = open("grids.txt", "w")
     for data_val in data['features']:
         strs=""
         ids = data_val['properties']['yolAdi']
@@ -70,6 +87,20 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
         strs += "{0:.0f}".format(ids)
         strs += ','
         coord = data_val['geometry']['coordinates']
+        for inner_c in range(0,len(coord),2):
+            if data_val['geometry']['type'] == 'MultiLineString':
+                for indexx in xrange(0, len(coord[inner_c]),2):
+                    longg = float((coord[inner_c][indexx] * 100000) - 2901658)
+                    latt = float((coord[inner_c][indexx+1] * 100000) - 4095124)
+                    gridn= findGrid(latt, longg,13,10)
+                    filegrid.write(str(gridn)+"\n")
+
+            else:
+                longg = float((coord[inner_c] * 100000) - 2901658)
+                latt = float((coord[inner_c+1] * 100000) - 4095124)
+                gridn = findGrid(latt, longg, 13, 10)
+                filegrid.write(str(gridn) + "\n")
+
         for inner_c in range(len(coord)):
             #print inner_c
             if data_val['geometry']['type'] == 'MultiLineString':
@@ -89,7 +120,9 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
         strs += valll #', '.join(str(item) for item in str(coord))
         strs += "\n"
         file.write(strs)
+
         #pprint (strs)
+
     print "smallestDistX:" + str(smallestDistX)
     print "smallesDistY:" + str(smallestDistY)
     print "maxDistX:" + str(maxDistX)
@@ -99,9 +132,5 @@ with open("/home/alp/Dropbox/Okul/Research/QPU/kadikoy_yol.json") as data_file:
     print "maxX:" + str(maxx)
     print "maxY:" + str(maxy)
     print "No Of points: "+str(pointCount/2)
-    #for (k1,v1) in data_val['properties'].items():
-     #   strs = ""
-      #  strs += v1
-       # for(k2,v2) in data_val['geometry'].items():
-        #    strs += str(v2)
-         #   print strs
+    print countX
+    print countY
